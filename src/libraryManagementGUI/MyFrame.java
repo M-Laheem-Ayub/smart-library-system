@@ -171,32 +171,38 @@ public class MyFrame extends JFrame {
 
         btnIssue.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                try {
+                    String name = txtName.getText().trim();
+                    String roll = txtRollNo.getText().trim();
+                    String title = txtBookTitle.getText().trim();
+                    
+                    if (name.isEmpty() || roll.isEmpty() || title.isEmpty()) {
+                        throw new EmptyFieldException("Name, Roll Number, and Book Title fields cannot be empty.");
+                    }
 
-                String name = txtName.getText();
-                String roll = txtRollNo.getText();
-                String title = txtBookTitle.getText();
-                String category = cbCategory.getSelectedItem().toString();
-                
-                String edition = "Not Selected";
-                if(rbNew.isSelected()) {
-                    edition = "New Edition";
-                } else if(rbOld.isSelected()) {
-                    edition = "Old Edition";
+                    if (roll.matches(".*[a-zA-Z]+.*")) {
+                        throw new InvalidRollNumberException("Roll Number cannot contain alphabets.");
+                    }
+                    
+                    if (roll.length() < 4) {
+                        throw new InvalidRollNumberException("Invalid Roll Number format.");
+                    }
+
+                    long numericRoll = Long.parseLong(roll); 
+
+                    String message = "Validations passed successfully!\n\n" +
+                                     "Name: " + name + "\n" +
+                                     "Roll No: " + roll + "\n" +
+                                     "Book: " + title;
+                    JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                } catch (EmptyFieldException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Missing Field", JOptionPane.ERROR_MESSAGE);
+                } catch (InvalidRollNumberException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Number Format Error: Roll number must contain only numeric values.", "Format Error", JOptionPane.ERROR_MESSAGE);
                 }
-                
-                String issueDate = txtIssueDate.getText();
-                String returnDate = txtReturnDate.getText();
-                String remarks = txtRemarks.getText();
-
-                String message = "Book Issued Successfully!\n\n" +
-                                 "Name: " + name + "\n" +
-                                 "Roll No: " + roll + "\n" +
-                                 "Book: " + title + " (" + edition + ")\n" +
-                                 "Category: " + category + "\n" +
-                                 "Issue Date: " + issueDate + "\n" +
-                                 "Return Date: " + returnDate;
-                                 
-                JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
             }
         });
     }

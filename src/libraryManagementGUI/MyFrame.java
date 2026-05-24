@@ -29,6 +29,18 @@ public class MyFrame extends JFrame {
     private JComboBox<String> cbCategory;
     private JRadioButton rbNew, rbOld;
     private ButtonGroup editionGroup;
+    
+    public static class NullSelectionException extends Exception {
+        public NullSelectionException(String message) {
+            super(message);
+        }
+    }
+
+    public static class InvalidDateException extends Exception {
+        public InvalidDateException(String message) {
+            super(message);
+        }
+    }
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -180,7 +192,7 @@ public class MyFrame extends JFrame {
                         throw new EmptyFieldException("Name, Roll Number, and Book Title fields cannot be empty.");
                     }
 
-                    if (roll.matches(".*[a-zA-Z]+.*")) {
+                    if (roll.matches(".[a-zA-Z]+.")) {
                         throw new InvalidRollNumberException("Roll Number cannot contain alphabets.");
                     }
                     
@@ -190,10 +202,46 @@ public class MyFrame extends JFrame {
 
                     long numericRoll = Long.parseLong(roll); 
 
-                    String message = "Validations passed successfully!\n\n" +
+                    String category = cbCategory.getSelectedItem().toString();
+                    
+                    String edition = "Not Selected";
+                    if(rbNew.isSelected()) {
+                        edition = "New Edition";
+                    } else if(rbOld.isSelected()) {
+                        edition = "Old Edition";
+                    }
+                    
+                    if (edition.equals("Not Selected")) {
+                        throw new NullSelectionException("Please select a Book Type (New/Old Edition).");
+                    }
+
+                    String issueDateStr = txtIssueDate.getText().trim();
+                    String returnDateStr = txtReturnDate.getText().trim();
+
+                    if (issueDateStr.isEmpty() || returnDateStr.isEmpty() || issueDateStr.equals("DD/MM/YYYY") || returnDateStr.equals("DD/MM/YYYY")) {
+                        throw new EmptyFieldException("Issue and Return dates cannot be empty.");
+                    }
+
+                    try {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                        sdf.setLenient(false);
+                        java.util.Date issueDate = sdf.parse(issueDateStr);
+                        java.util.Date returnDate = sdf.parse(returnDateStr);
+                        
+                        if (returnDate.before(issueDate)) {
+                            throw new InvalidDateException("Return Date cannot be earlier than Issue Date.");
+                        }
+                    } catch (java.text.ParseException pe) {
+                        throw new InvalidDateException("Invalid Date Format! Please use DD/MM/YYYY exactly.");
+                    }
+
+                    String message = "Book Issued Successfully!\n\n" +
                                      "Name: " + name + "\n" +
                                      "Roll No: " + roll + "\n" +
-                                     "Book: " + title;
+                                     "Book: " + title + " (" + edition + ")\n" +
+                                     "Category: " + category + "\n" +
+                                     "Issue Date: " + issueDateStr + "\n" +
+                                     "Return Date: " + returnDateStr;
                     JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
 
                 } catch (EmptyFieldException ex) {
@@ -202,6 +250,12 @@ public class MyFrame extends JFrame {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Invalid Input", JOptionPane.ERROR_MESSAGE);
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "Number Format Error: Roll number must contain only numeric values.", "Format Error", JOptionPane.ERROR_MESSAGE);
+                } catch (NullSelectionException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Selection Error", JOptionPane.ERROR_MESSAGE);
+                } catch (InvalidDateException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Date Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    JOptionPane.showMessageDialog(null, "Operation Completed", "Status", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
